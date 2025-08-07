@@ -1,28 +1,43 @@
 import { Box, Table, Flex,Heading } from '@sparrowengg/twigs-react';
 import { Thead, Tbody, Th, Tr, Td } from '@sparrowengg/twigs-react';
-import { useEffect, useState } from 'react';
 import './App.css'
-import axios from 'axios';
-import { useQuery } from '@tanstack/react-query';
-
+import { useFetchUsers } from './useFetchusers';
+import { getCoreRowModel, useReactTable, flexRender } from '@tanstack/react-table';
 function App() {
 
+  const {data, isLoading, isError, error} = useFetchUsers();
+  
 
-  const fetchUsers = async() => {
-    const response = await axios.get('https://randomuser.me/api/?results=1000')
-    return response.data.results;
-  }
+  const columns =[
+    
+    {
+      header: 'First Name',
+      accessorKey: 'name.first'
+    },
+    {
+      header: 'Last Name',
+      accessorKey: 'name.last'
+    },
+    {
+      header: 'Email',
+      accessorKey: 'email'
+    },
+    {
+      header: 'Gender',
+      accessorKey: 'gender'
+    },
+    {
+      header: 'City',
+      accessorKey: 'location.city'
+    },
+    {
+      header: 'Country',
+      accessorKey: 'location.country'
+    }
 
-   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['users'],
-    queryFn: fetchUsers,
-    staleTime : 10000
-  });
+  ]
 
-  if (isLoading) return <div style={{ textAlign: "center" }}>Loading...</div>;
-  if (isError) return <div style={{ textAlign: "center", color: "red" }}>Error: {error.message}</div>;
-
- 
+  const table = useReactTable({data : data ?? [], columns, getCoreRowModel: getCoreRowModel()})
 
   return (
     <>
@@ -39,36 +54,33 @@ function App() {
               }
             }
           }}> 
-            <Table>
-            <Thead css={{
-                position: "sticky",
-                top : "0px",
-                backgroundColor : "white"
-              }}> 
-              <Tr >
-                <Th>Id</Th>
-                <Th>First Name</Th>
-                <Th>Last Name</Th>
-                <Th>Email</Th>
-                <Th>Gender</Th>
-                <Th>City</Th>
-                <Th>Country</Th>
-              </Tr>
+          <Table>
+            <Thead>
+              {table.getHeaderGroups().map(headerGroup => (
+                <Tr key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <Th key={header.id}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </Th>
+                  ))}
+                </Tr>
+              ))}
             </Thead>
             <Tbody>
-              {data.map((user, index) =>
-                <Tr key={index}>
-                  <Td>{index+1}</Td>
-                  <Td>{user.name.first}</Td>
-                  <Td>{user.name.last}</Td>
-                  <Td>{user.email}</Td>
-                  <Td>{user.gender}</Td>
-                  <Td>{user.location.city}</Td>
-                  <Td>{user.location.country}</Td>
+              {table.getRowModel().rows.map(row => (
+                <Tr key={row.id}>
+                  {
+                    row.getVisibleCells().map(cell=>(
+                      <Td key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </Td>
+                    ))
+                  }
                 </Tr>
-              )}
+              ))}
             </Tbody>
           </Table>
+           
           </Box>
         </Flex>
 
